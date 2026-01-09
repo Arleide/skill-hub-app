@@ -1,26 +1,46 @@
 import 'package:flutter/material.dart';
-import 'package:skillhub_app/screen/create_account_screen.dart';
-import 'package:skillhub_app/screen/home_screen.dart';
+import 'package:skillhub_app/service/auth_service.dart';
 import 'package:skillhub_app/util/custom_nav.dart';
 import 'package:skillhub_app/widget/custom_text_field.dart';
 
-class LoginScreen extends StatefulWidget {
-  const LoginScreen({super.key});
+class CreateAccountScreen extends StatefulWidget {
+  const CreateAccountScreen({super.key});
 
   @override
-  State<LoginScreen> createState() => _LoginScreenState();
+  State<CreateAccountScreen> createState() => _CreateAccountScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class _CreateAccountScreenState extends State<CreateAccountScreen> {
+  final TextEditingController nomeController = TextEditingController();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController senhaController = TextEditingController();
+  final TextEditingController confirmarSenhaController =
+      TextEditingController();
+
+  final AuthService service = AuthService();
+
+  @override
+  void initState() {
+    super.initState();
+    nomeController.text = '';
+    emailController.text = '';
+    senhaController.text = '';
+    confirmarSenhaController.text = '';
+  }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(body: _body());
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Criar Conta', style: TextStyle(color: Colors.white)),
+        iconTheme: IconThemeData(color: Colors.white),
+        backgroundColor: Color(0xFF0A0A0F),
+      ),
+      body: _body(),
+    );
   }
 
-  _body() {
+  Widget? _body() {
     return Container(
       width: double.infinity,
       height: double.infinity,
@@ -58,6 +78,12 @@ class _LoginScreenState extends State<LoginScreen> {
 
                 const SizedBox(height: 35),
                 CustomTextField(
+                  label: 'Nome',
+                  icon: Icons.person_2_outlined,
+                  controller: nomeController,
+                ),
+                const SizedBox(height: 20),
+                CustomTextField(
                   label: 'E-mail',
                   icon: Icons.email_outlined,
                   controller: emailController,
@@ -67,15 +93,15 @@ class _LoginScreenState extends State<LoginScreen> {
                   label: 'Senha',
                   icon: Icons.lock_outline,
                   controller: senhaController,
+                  isPassword: true,
                 ),
-                const SizedBox(height: 10),
 
-                TextButton(
-                  onPressed: () {},
-                  child: const Text(
-                    "Esqueceu a senha?",
-                    style: TextStyle(color: Colors.white),
-                  ),
+                const SizedBox(height: 20),
+                CustomTextField(
+                  label: 'Confirme a Senha',
+                  icon: Icons.lock_outline,
+                  controller: confirmarSenhaController,
+                  isPassword: true,
                 ),
 
                 const SizedBox(height: 20),
@@ -100,11 +126,9 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
-                    onPressed: () {
-                      push(context, HomeScreen(), replace: true);
-                    },
+                    onPressed: _createAccount,
                     child: const Text(
-                      "Entrar",
+                      "Confirmar",
                       style: TextStyle(fontSize: 18, color: Colors.white),
                     ),
                   ),
@@ -116,16 +140,16 @@ class _LoginScreenState extends State<LoginScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     const Text(
-                      "Não tem uma conta?",
+                      "Já tem uma conta?",
                       style: TextStyle(color: Colors.white70),
                     ),
 
                     TextButton(
                       onPressed: () {
-                        push(context, CreateAccountScreen());
+                        Navigator.pop(context);
                       },
                       child: const Text(
-                        "Cadastre-se",
+                        "Entrar",
                         style: TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
@@ -141,4 +165,25 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
     );
   }
+
+  _createAccount() async {
+
+    String nome = nomeController.text;
+    String email = emailController.text;
+    String senha = senhaController.text;
+    String confirmarSenha = confirmarSenhaController.text;
+
+    if(nome == "" ||  email == "" || senha == "" || confirmarSenha == "" ) {
+      return;
+    }
+
+
+    if(senha != confirmarSenha) {
+      return;
+    }
+
+  await service.register(nome: nome, email: email, senha: senha);
+
+  }
+
 }

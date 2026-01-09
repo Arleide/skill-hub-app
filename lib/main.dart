@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:skillhub_app/screen/create_account_screen.dart';
 import 'package:skillhub_app/screen/login_screen.dart';
 
 void main() {
@@ -17,7 +18,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: LoginScreen(),
+      home: const  LoginScreen(),
     );
   }
 }
