@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:skillhub_app/service/auth_service.dart';
-import 'package:skillhub_app/util/custom_nav.dart';
 import 'package:skillhub_app/widget/custom_text_field.dart';
+
+import '../util/dialog_helper.dart';
 
 class CreateAccountScreen extends StatefulWidget {
   const CreateAccountScreen({super.key});
@@ -18,6 +19,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
       TextEditingController();
 
   final AuthService service = AuthService();
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -127,10 +129,19 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                       padding: const EdgeInsets.symmetric(vertical: 14),
                     ),
                     onPressed: _createAccount,
-                    child: const Text(
-                      "Confirmar",
-                      style: TextStyle(fontSize: 18, color: Colors.white),
-                    ),
+                    child: _isLoading
+                        ? const SizedBox(
+                            height: 22,
+                            width: 22,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 2,
+                            ),
+                          )
+                        : const Text(
+                            "Confirmar",
+                            style: TextStyle(fontSize: 18, color: Colors.white),
+                          ),
                   ),
                 ),
 
@@ -167,23 +178,64 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
   }
 
   _createAccount() async {
-
     String nome = nomeController.text;
     String email = emailController.text;
     String senha = senhaController.text;
     String confirmarSenha = confirmarSenhaController.text;
 
-    if(nome == "" ||  email == "" || senha == "" || confirmarSenha == "" ) {
+
+    if (nome.isEmpty ||
+        email.isEmpty ||
+        senha.isEmpty ||
+        confirmarSenha.isEmpty) {
+
+      await showAppDialog(
+        context,
+        title: 'Atenção',
+        message: 'Preencha todos os campos',
+        isError: true,
+      );
       return;
     }
 
-
-    if(senha != confirmarSenha) {
+    if (senha != confirmarSenha) {
+      await showAppDialog(
+        context,
+        title: 'Erro',
+        message: 'As senhas não conferem',
+        isError: true,
+      );
       return;
     }
 
-  await service.register(nome: nome, email: email, senha: senha);
+    try {
+      setState(() => _isLoading = true);
 
+      await service.register(nome: nome, email: email, senha: senha);
+
+      if (!mounted) return;
+
+      await showAppDialog(
+        context,
+        title: 'Sucesso',
+        message: 'Conta criada com sucesso 🎉',
+        onConfirm: () {
+          Navigator.pop(context);
+        },
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      await showAppDialog(
+        context,
+        title: 'Erro',
+        message: 'Erro ao criar conta',
+        isError: true,
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
   }
-
 }
