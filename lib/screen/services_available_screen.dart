@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:skillhub_app/model/servico_oferecido.dart';
+import 'package:skillhub_app/screen/request_service_screen.dart';
+import 'package:skillhub_app/screen/requests_received_screen.dart';
+import 'package:skillhub_app/screen/requests_sent_screen.dart';
 import 'package:skillhub_app/service/service_available_service.dart';
+import 'package:skillhub_app/util/custom_nav.dart';
 
 class ServicesAvailableScreen extends StatefulWidget {
   const ServicesAvailableScreen({super.key});
@@ -73,6 +77,9 @@ class _ServicesAvailableScreenState extends State<ServicesAvailableScreen> {
                 color: Colors.green,
               ),
             ),
+            onTap: () {
+              push(context, RequestServiceScreen(servico: servico));
+            },
           ),
         );
       },

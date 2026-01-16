@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:skillhub_app/screen/create_account_screen.dart';
 import 'package:skillhub_app/screen/login_screen.dart';
 
 void main() {
