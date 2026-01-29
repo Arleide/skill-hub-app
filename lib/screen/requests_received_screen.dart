@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:skillhub_app/model/solicitacao_servico.dart';
 import 'package:skillhub_app/service/service_request_service.dart';
+import 'package:skillhub_app/util/dialog_helper.dart';
 
 class RequestsReceivedScreen extends StatefulWidget {
   const RequestsReceivedScreen({super.key});
@@ -12,6 +13,7 @@ class RequestsReceivedScreen extends StatefulWidget {
 }
 
 class _RequestsReceivedScreenState extends State<RequestsReceivedScreen> {
+
   final ServiceRequestService _service = ServiceRequestService();
 
   bool loading = true;
@@ -50,32 +52,35 @@ class _RequestsReceivedScreenState extends State<RequestsReceivedScreen> {
             borderRadius: BorderRadius.circular(12),
           ),
           child: ListTile(
-            title: Text(
-              req.servicoOferecido?.nome ?? 'Serviço',
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-            subtitle: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 6),
-                Text(
-                  req.servicoOferecido?.descricao ?? '',
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Solicitante: ${req.usuarioSolicitante?.nome ?? ''}',
-                  style: const TextStyle(fontSize: 12, color: Colors.grey),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Data: ${_formatDate(req.dataRealizacao)}',
-                  style: const TextStyle(fontSize: 12, color: Colors.grey),
-                ),
-              ],
-            ),
-            trailing: _buildStatusChip(req.status),
+              title: Text(
+                req.servicoOferecido?.nome ?? 'Serviço',
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              subtitle: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const SizedBox(height: 6),
+                  Text(
+                    req.servicoOferecido?.descricao ?? '',
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Solicitante: ${req.usuarioSolicitante?.nome ?? ''}',
+                    style: const TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Data: ${_formatDate(req.dataRealizacao)}',
+                    style: const TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
+                ],
+              ),
+              trailing: _buildStatusChip(req.status),
+              onTap: (req.status == 'ABERTA' || req.status == 'CONFIRMADA')
+                  ? () => _showActionDialog(req)
+                  : null,
           ),
         );
       },
@@ -110,17 +115,13 @@ class _RequestsReceivedScreenState extends State<RequestsReceivedScreen> {
         color = Colors.orange;
         label = 'Aberta';
         break;
-      case 'ACEITA':
+      case 'CONFIRMADA':
         color = Colors.blue;
-        label = 'Aceita';
+        label = 'Confirmada';
         break;
-      case 'CONCLUIDA':
+      case 'ENCERRADA':
         color = Colors.green;
-        label = 'Concluída';
-        break;
-      case 'CANCELADA':
-        color = Colors.red;
-        label = 'Cancelada';
+        label = 'Encerrada';
         break;
       default:
         color = Colors.grey;
@@ -130,6 +131,89 @@ class _RequestsReceivedScreenState extends State<RequestsReceivedScreen> {
     return Chip(
       label: Text(label, style: const TextStyle(color: Colors.white)),
       backgroundColor: color,
+    );
+  }
+
+  Future<void> _updateStatus(int id, String status) async {
+    try {
+      await _service.updateRequestStatus(
+        requestId: id,
+        status: status,
+      );
+
+      if(!mounted) return;
+
+      await showAppDialog(
+        context,
+        title: 'Sucesso',
+        message: 'Status atualizado com sucesso',
+      );
+
+      _loadRequests();
+    } catch (e) {
+      debugPrint(e.toString());
+
+      if(!mounted) return;
+
+      await showAppDialog(
+        context,
+        title: 'Atenção',
+        message: 'Ocorreu um erro ao salvar',
+        isError: true,
+      );
+    }
+  }
+
+  void _showActionDialog(SolicitacaoServico req) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        if (req.status == 'ABERTA') {
+          return AlertDialog(
+            title: const Text('Solicitação de Serviço'),
+            content: const Text(
+              'Deseja confirmar esta solicitação?',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Voltar'),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  Navigator.pop(context);
+                  await _updateStatus(req.id!, 'CONFIRMADA');
+                },
+                child: const Text('Confirmar'),
+              ),
+            ],
+          );
+        }
+
+        if (req.status == 'CONFIRMADA') {
+          return AlertDialog(
+            title: const Text('Encerrar Serviço'),
+            content: const Text(
+              'Deseja encerrar este serviço?',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text('Voltar'),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  Navigator.pop(context);
+                  await _updateStatus(req.id!, 'ENCERRADA');
+                },
+                child: const Text('Encerrar'),
+              ),
+            ],
+          );
+        }
+
+        return const SizedBox.shrink();
+      },
     );
   }
 }

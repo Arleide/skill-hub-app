@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:skillhub_app/model/solicitacao_servico.dart';
+import 'package:skillhub_app/screen/request_evaluation_screen.dart';
 import 'package:skillhub_app/service/service_request_service.dart';
+import 'package:skillhub_app/util/custom_nav.dart';
 
 class RequestsSentScreen extends StatefulWidget {
   const RequestsSentScreen({super.key});
@@ -50,6 +52,15 @@ class _RequestsSentScreenState extends State<RequestsSentScreen> {
             trailing: Chip(
               label: Text(req.status ?? ''),
             ),
+            onTap: req.status == 'ENCERRADA'
+                ? () async {
+              final result = await  push(context, RequestEvaluationScreen(solicitacao: req));
+
+              if (result == true) {
+                _loadRequests(); // recarrega lista se quiser
+              }
+            }
+                : null,
           ),
         );
       },
