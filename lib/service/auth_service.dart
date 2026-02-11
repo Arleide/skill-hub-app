@@ -1,12 +1,17 @@
 import 'dart:convert';
 import 'dart:io';
 import 'dart:async';
+import 'package:dio/dio.dart';
 import 'package:http/http.dart' as http;
 import 'package:skillhub_app/model/login_response.dart';
+import 'package:skillhub_app/network/dio_client.dart';
 import 'package:skillhub_app/util/ApiUrl.dart';
+import 'package:skillhub_app/util/secure_storage_service.dart';
 
 class AuthService {
   final String _baseAuthUrl = '${ApiUrl.BASE_URL}auth';
+
+  final Dio _dio = DioClient.dio;
 
   Future<void> register({
     required String nome,
@@ -62,4 +67,29 @@ class AuthService {
       throw Exception('Tempo de resposta esgotado.');
     }
   }
+
+  Future<bool> refreshToken() async {
+    final refreshToken = await SecureStorageService.getRefreshToken();
+    if (refreshToken == null) return false;
+
+    final response = await _dio.post(
+      '/auth/refresh',
+      data: {'refreshToken': refreshToken},
+      options: Options(
+        headers: {
+          'Authorization': null,
+        },
+      ),
+    );
+
+    if (response.statusCode == 200) {
+      await SecureStorageService.saveLogin(
+        LoginResponse.fromJson(response.data),
+      );
+      return true;
+    }
+
+    return false;
+  }
+
 }

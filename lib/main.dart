@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:skillhub_app/network/dio_client.dart';
 import 'package:skillhub_app/screen/login_screen.dart';
 
 void main() {
+  DioClient.setup();
   runApp(const MyApp());
 }
 
